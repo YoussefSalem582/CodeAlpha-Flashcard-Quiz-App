@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'add_flashcard_screen.dart';
 import 'quiz_screen.dart';
+import '../main.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,6 +34,12 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: const Text('Start Quiz'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await Provider.of<FlashcardProvider>(context, listen: false).fetchFlashcards();
+              },
+              child: const Text('Fetch Questions from Internet'),
             ),
           ],
         ),
