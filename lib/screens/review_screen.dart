@@ -21,6 +21,7 @@ class ReviewScreen extends StatelessWidget {
             child: FlashcardWidget(
               flashcard: incorrectFlashcards[index],
               onNext: (bool correct) {},
+              showCorrectAnswer: true,
             ),
           );
         },

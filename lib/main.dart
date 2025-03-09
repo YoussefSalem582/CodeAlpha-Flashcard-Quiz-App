@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'models/flashcard.dart';
 import 'screens/home_screen.dart';
 import 'services/trivia_service.dart';
+import 'providers/flashcard_provider.dart';
+import 'providers/progress_provider.dart';
+import 'providers/settings_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,8 +16,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => FlashcardProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => FlashcardProvider()),
+        ChangeNotifierProvider(create: (context) => ProgressProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flashcard Quiz App',
@@ -24,23 +31,5 @@ class MyApp extends StatelessWidget {
         home: const HomeScreen(),
       ),
     );
-  }
-}
-
-class FlashcardProvider with ChangeNotifier {
-  final List<Flashcard> _flashcards = [];
-  final TriviaService _triviaService = TriviaService();
-
-  List<Flashcard> get flashcards => _flashcards;
-
-  void addFlashcard(Flashcard flashcard) {
-    _flashcards.add(flashcard);
-    notifyListeners();
-  }
-
-  Future<void> fetchFlashcards() async {
-    final flashcards = await _triviaService.fetchQuestions();
-    _flashcards.addAll(flashcards);
-    notifyListeners();
   }
 }

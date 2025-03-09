@@ -3,19 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/flashcard.dart';
-import '../main.dart';
 import '../widgets/flashcard_widget.dart';
 import '../widgets/score_widget.dart';
 import 'review_screen.dart';
+import '../providers/progress_provider.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final List<Flashcard> flashcards;
+
+  const QuizScreen({required this.flashcards, super.key});
 
   @override
   _QuizScreenState createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   final AudioPlayer _audioPlayer = AudioPlayer();
   final Duration _quizDuration = const Duration(minutes: 5);
@@ -26,12 +28,17 @@ class _QuizScreenState extends State<QuizScreen> {
   int _remainingSeconds = 0;
   final List<Flashcard> _incorrectFlashcards = [];
   final List<int> _timeTaken = [];
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
     _stopwatch.start();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
   }
 
   void _startTimer() {
@@ -50,6 +57,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _endQuiz() {
     _stopwatch.stop();
+    Provider.of<ProgressProvider>(context, listen: false).updateProgress(_score, widget.flashcards.length);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -61,7 +69,7 @@ class _QuizScreenState extends State<QuizScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ScoreWidget(score: _score, total: Provider.of<FlashcardProvider>(context, listen: false).flashcards.length),
+                ScoreWidget(score: _score, total: widget.flashcards.length),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
@@ -89,7 +97,7 @@ class _QuizScreenState extends State<QuizScreen> {
       _score++;
       _audioPlayer.play(AssetSource('assets/sounds/correct.mp3')); // No await
     } else {
-      _incorrectFlashcards.add(Provider.of<FlashcardProvider>(context, listen: false).flashcards[_currentIndex]);
+      _incorrectFlashcards.add(widget.flashcards[_currentIndex]);
       _audioPlayer.play(AssetSource('assets/sounds/incorrect.mp3')); // No await
     }
     setState(() {
@@ -100,20 +108,20 @@ class _QuizScreenState extends State<QuizScreen> {
       curve: Curves.easeIn,
     );
   }
+
   @override
   void dispose() {
     _timer?.cancel();
     _stopwatch.stop();
     _audioPlayer.dispose();
     _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final flashcards = Provider.of<FlashcardProvider>(context).flashcards;
-
-    if (_currentIndex >= flashcards.length) {
+    if (_currentIndex >= widget.flashcards.length) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Quiz Finished'),
@@ -122,7 +130,7 @@ class _QuizScreenState extends State<QuizScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ScoreWidget(score: _score, total: flashcards.length),
+              ScoreWidget(score: _score, total: widget.flashcards.length),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -146,20 +154,34 @@ class _QuizScreenState extends State<QuizScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Time Remaining: ${_remainingSeconds ~/ 60}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
-              style: Theme.of(context).textTheme.headlineSmall,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Time Remaining: ${_remainingSeconds ~/ 60}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Text(
+                  'Score: $_score',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ],
             ),
+          ),
+          LinearProgressIndicator(
+            value: _currentIndex / widget.flashcards.length,
+            backgroundColor: Colors.grey[300],
+            color: Colors.blue,
           ),
           Expanded(
             child: PageView.builder(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: flashcards.length,
+              itemCount: widget.flashcards.length,
               itemBuilder: (context, index) {
                 return Center(
                   child: FlashcardWidget(
-                    flashcard: flashcards[index],
+                    flashcard: widget.flashcards[index],
                     onNext: _nextFlashcard,
                   ),
                 );
