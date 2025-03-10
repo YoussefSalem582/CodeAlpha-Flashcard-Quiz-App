@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/flashcard.dart';
 
-class FlashcardWidget extends StatelessWidget {
+class FlashcardWidget extends StatefulWidget {
   final Flashcard flashcard;
   final Function(bool) onNext;
   final bool showCorrectAnswer;
@@ -12,6 +12,13 @@ class FlashcardWidget extends StatelessWidget {
     this.showCorrectAnswer = false,
     super.key,
   });
+
+  @override
+  _FlashcardWidgetState createState() => _FlashcardWidgetState();
+}
+
+class _FlashcardWidgetState extends State<FlashcardWidget> {
+  int _selectedIndex = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -28,54 +35,86 @@ class FlashcardWidget extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Text(
-                flashcard.question,
+                widget.flashcard.question,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ),
           ),
           const SizedBox(height: 30),
-          if (flashcard.type == FlashcardType.trueFalse) ...[
-            ElevatedButton(
-              onPressed: () => onNext(flashcard.answer == 'True'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+          if (widget.flashcard.type == FlashcardType.trueFalse) ...[
+            ToggleButtons(
+              onPressed: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+                widget.onNext(index == 0 ? widget.flashcard.answer == 'True' : widget.flashcard.answer == 'False');
+              },
+              isSelected: [_selectedIndex == 0, _selectedIndex == 1],
+              selectedColor: Colors.white,
+              fillColor: Colors.blueAccent,
+              selectedBorderColor: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(15),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'True',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: _selectedIndex == 0 && widget.showCorrectAnswer && widget.flashcard.answer == 'True'
+                          ? Colors.green
+                          : null,
+                    ),
+                  ),
                 ),
-                backgroundColor: showCorrectAnswer && flashcard.answer == 'True' ? Colors.green : null,
-              ),
-              child: const Text('True', style: TextStyle(fontSize: 18)),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => onNext(flashcard.answer == 'False'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'False',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: _selectedIndex == 1 && widget.showCorrectAnswer && widget.flashcard.answer == 'False'
+                          ? Colors.green
+                          : null,
+                    ),
+                  ),
                 ),
-                backgroundColor: showCorrectAnswer && flashcard.answer == 'False' ? Colors.green : null,
-              ),
-              child: const Text('False', style: TextStyle(fontSize: 18)),
+              ],
             ),
-          ] else if (flashcard.type == FlashcardType.multipleChoice) ...[
-            ...flashcard.options!.map((option) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: ElevatedButton(
-                  onPressed: () => onNext(flashcard.answer == option),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 60),
+          ] else if (widget.flashcard.type == FlashcardType.multipleChoice) ...[
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: List.generate(
+                widget.flashcard.options!.length,
+                    (index) {
+                  return ChoiceChip(
+                    label: Text(
+                      widget.flashcard.options![index],
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: _selectedIndex == index && widget.showCorrectAnswer && widget.flashcard.answer == widget.flashcard.options![index]
+                            ? Colors.green
+                            : null,
+                      ),
+                    ),
+                    selected: _selectedIndex == index,
+                    onSelected: (value) {
+                      setState(() {
+                        _selectedIndex = value ? index : -1;
+                      });
+                      widget.onNext(value ? widget.flashcard.answer == widget.flashcard.options![index] : false);
+                    },
+                    selectedColor: Colors.blueAccent,
+                    labelPadding: const EdgeInsets.all(8.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    backgroundColor: showCorrectAnswer && flashcard.answer == option ? Colors.green : null,
-                  ),
-                  child: Text(option, style: const TextStyle(fontSize: 18)),
-                ),
-              );
-            }).toList(),
+                  );
+                },
+              ),
+            ),
           ],
         ],
       ),

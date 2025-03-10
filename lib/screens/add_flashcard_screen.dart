@@ -22,19 +22,24 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Flashcard'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              TextFormField(
+              const Text(
+                'Add a new flashcard',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
                 controller: questionController,
-                decoration: const InputDecoration(
-                  labelText: 'Question',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Question',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a question';
@@ -43,51 +48,34 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              DropdownButtonFormField<FlashcardType>(
-                value: _selectedType,
-                onChanged: (FlashcardType? newValue) {
-                  setState(() {
-                    _selectedType = newValue!;
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Flashcard Type',
-                  border: OutlineInputBorder(),
-                ),
-                items: FlashcardType.values.map((FlashcardType type) {
-                  return DropdownMenuItem<FlashcardType>(
-                    value: type,
-                    child: Text(type.toString().split('.').last),
-                  );
-                }).toList(),
+              Row(
+                children: [
+                  const Text(
+                    'Flashcard type:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildTypeToggle(),
+                ],
               ),
               const SizedBox(height: 20),
               if (_selectedType == FlashcardType.multipleChoice)
                 ...optionsController.map((controller) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: TextFormField(
-                      controller: controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Option',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an option';
-                        }
-                        return null;
-                      },
-                    ),
+                  return _buildTextField(
+                    controller: controller,
+                    label: 'Option',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an option';
+                      }
+                      return null;
+                    },
                   );
                 }).toList(),
               const SizedBox(height: 20),
-              TextFormField(
+              _buildTextField(
                 controller: answerController,
-                decoration: const InputDecoration(
-                  labelText: 'Answer',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Answer',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter an answer';
@@ -95,36 +83,83 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    final question = questionController.text;
-                    final answer = answerController.text;
-                    final options = optionsController.map((controller) => controller.text).toList();
-
-                    final flashcard = Flashcard(
-                      question: question,
-                      answer: answer,
-                      type: _selectedType,
-                      options: _selectedType == FlashcardType.multipleChoice ? options : null,
-                    );
-                    Provider.of<FlashcardProvider>(context, listen: false).addFlashcard(flashcard);
-                    Navigator.pop(context);
-                  }
-                },
+                onPressed: _saveFlashcard,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text('Add Flashcard'),
+                child: const Text(
+                  'Add Flashcard',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String label, String? Function(String?)? validator}) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildTypeToggle() {
+    return Row(
+      children: [
+        Radio<FlashcardType>(
+          value: FlashcardType.trueFalse,
+          groupValue: _selectedType,
+          onChanged: (FlashcardType? newValue) {
+            setState(() {
+              _selectedType = newValue!;
+            });
+          },
+        ),
+        const Text('True/False'),
+        const SizedBox(width: 10),
+        Radio<FlashcardType>(
+          value: FlashcardType.multipleChoice,
+          groupValue: _selectedType,
+          onChanged: (FlashcardType? newValue) {
+            setState(() {
+              _selectedType = newValue!;
+            });
+          },
+        ),
+        const Text('Multiple Choice'),
+      ],
+    );
+  }
+
+  void _saveFlashcard() {
+    if (_formKey.currentState!.validate()) {
+      final question = questionController.text;
+      final answer = answerController.text;
+      final options = optionsController.map((controller) => controller.text).toList();
+
+      final flashcard = Flashcard(
+        question: question,
+        answer: answer,
+        type: _selectedType,
+        options: _selectedType == FlashcardType.multipleChoice ? options : null,
+      );
+      Provider.of<FlashcardProvider>(context, listen: false).addFlashcard(flashcard);
+      Navigator.pop(context);
+    }
   }
 }

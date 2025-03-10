@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/category.dart';
 import '../providers/settings_provider.dart';
+import '../services/trivia_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -46,6 +48,44 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            ListTile(
+              title: const Text('Category'),
+              trailing: Consumer<SettingsProvider>(
+                builder: (context, settings, child) {
+                  return DropdownButton<Category>(
+                    value: settings.category,
+                    onChanged: (Category? newValue) {
+                      settings.setCategory(newValue!);
+                    },
+                    items: Category.values.map<DropdownMenuItem<Category>>((Category category) {
+                      return DropdownMenuItem<Category>(
+                        value: category,
+                        child: Text(category.name),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ),
+            ListTile(
+              title: const Text('Difficulty'),
+              trailing: Consumer<SettingsProvider>(
+                builder: (context, settings, child) {
+                  return DropdownButton<String>(
+                    value: settings.difficulty,
+                    onChanged: (String? newValue) {
+                      settings.setDifficulty(newValue!);
+                    },
+                    items: TriviaService.difficulties.map<DropdownMenuItem<String>>((String difficulty) {
+                      return DropdownMenuItem<String>(
+                        value: difficulty,
+                        child: Text(difficulty),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
             ),
           ],
         ),

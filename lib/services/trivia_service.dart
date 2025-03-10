@@ -3,12 +3,13 @@ import 'package:http/http.dart' as http;
 import '../models/flashcard.dart';
 
 class TriviaService {
+  static const List<String> difficulties = ['easy', 'medium', 'hard'];
   static const Map<String, String> _categoryUrls = {
-    'CS Questions': 'https://api.example.com/cs_questions',
-    'Flutter Questions': 'https://api.example.com/flutter_questions',
-    'ML Questions': 'https://api.example.com/ml_questions',
-    'Math Questions': 'https://api.example.com/math_questions',
-    'English': 'https://api.example.com/english_questions',
+    'CS Questions': 'https://opentdb.com/api.php?amount=10&category=18&type=multiple',
+    'Flutter Questions': 'https://opentdb.com/api.php?amount=10&category=22&type=multiple',
+    'ML Questions': 'https://opentdb.com/api.php?amount=10&category=23&type=multiple',
+    'Math Questions': 'https://opentdb.com/api.php?amount=10&category=19&type=multiple',
+    'English': 'https://opentdb.com/api.php?amount=10&category=25&type=multiple',
   };
 
   Future<List<Flashcard>> fetchQuestions({required String category}) async {

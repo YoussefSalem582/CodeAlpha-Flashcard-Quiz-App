@@ -12,16 +12,36 @@ class ReviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Review Incorrect Answers'),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Colors.blue,
+                Colors.red,
+              ],
+            ),
+          ),
+        ),
       ),
       body: ListView.builder(
         itemCount: incorrectFlashcards.length,
         itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FlashcardWidget(
-              flashcard: incorrectFlashcards[index],
-              onNext: (bool correct) {},
-              showCorrectAnswer: true,
+          return Card(
+            elevation: 8,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: FlashcardWidget(
+                flashcard: incorrectFlashcards[index],
+                onNext: (bool correct) {},
+                showCorrectAnswer: true,
+              ),
             ),
           );
         },
