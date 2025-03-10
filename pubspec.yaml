@@ -38,6 +38,7 @@ dependencies:
   animated_text_kit:
   confetti:
   http:
+  flutter_staggered_animations:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -12,14 +12,46 @@ class CategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final categories = TriviaService.categories;
     final categoriesWithColors = [
-      {'color': Colors.blue, 'icon': Icons.computer},
-      {'color': Colors.green, 'icon': Icons.science},
-      {'color': Colors.orange, 'icon': Icons.calculate},
-      {'color': Colors.purple, 'icon': Icons.public},
-      {'color': Colors.red, 'icon': Icons.history},
-      {'color': Colors.teal, 'icon': Icons.book},
-      {'color': Colors.indigo, 'icon': Icons.lightbulb},
-      {'color': Colors.amber, 'icon': Icons.games},
+      {
+        'color': Colors.blue,
+        'icon': Icons.computer,
+        'description': 'Test your programming knowledge'
+      },
+      {
+        'color': Colors.green,
+        'icon': Icons.science,
+        'description': 'Explore scientific concepts'
+      },
+      {
+        'color': Colors.orange,
+        'icon': Icons.calculate,
+        'description': 'Challenge your math skills'
+      },
+      {
+        'color': Colors.purple,
+        'icon': Icons.public,
+        'description': 'Learn about our world'
+      },
+      {
+        'color': Colors.red,
+        'icon': Icons.history,
+        'description': 'Journey through time'
+      },
+      {
+        'color': Colors.teal,
+        'icon': Icons.book,
+        'description': 'Master the language'
+      },
+      {
+        'color': Colors.indigo,
+        'icon': Icons.lightbulb,
+        'description': 'Expand your horizons'
+      },
+      {
+        'color': Colors.amber,
+        'icon': Icons.games,
+        'description': 'Fun and games'
+      },
     ];
 
     return Scaffold(
@@ -38,9 +70,8 @@ class CategoriesScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -59,6 +90,7 @@ class CategoriesScreen extends StatelessWidget {
               title: categories[index],
               icon: categoriesWithColors[index]['icon'] as IconData,
               color: categoriesWithColors[index]['color'] as Color,
+              description: categoriesWithColors[index]['description'] as String,
               onTap: () {
                 Navigator.push(
                   context,
@@ -73,11 +105,11 @@ class CategoriesScreen extends StatelessWidget {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/custom');
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/custom'),
+        icon: const Icon(Icons.add),
+        label: const Text('Custom Quiz'),
+        tooltip: 'Create custom flashcards',
       ),
     );
   }
