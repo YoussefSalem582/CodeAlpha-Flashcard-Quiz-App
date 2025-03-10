@@ -1,88 +1,133 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:animated_text_kit/animated_text_kit.dart'; // Ensure this import is included
-import '../providers/settings_provider.dart';
-import '../widgets/category_card.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../providers/progress_provider.dart';
-import 'custom_flashcard_screen.dart';
+import '../widgets/score_widget.dart';
+import '../widgets/category_card.dart';
+import '../services/trivia_service.dart';
 import 'quiz_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  final List<Map<String, dynamic>> categoriesWithColors = [
+    {'color': Colors.blue, 'icon': Icons.computer, 'name': 'Computer Science'},
+    {'color': Colors.green, 'icon': Icons.science, 'name': 'Science'},
+    {'color': Colors.orange, 'icon': Icons.calculate, 'name': 'Mathematics'},
+    {'color': Colors.purple, 'icon': Icons.public, 'name': 'Geography'},
+    {'color': Colors.red, 'icon': Icons.history, 'name': 'History'},
+    {'color': Colors.teal, 'icon': Icons.book, 'name': 'English'},
+    {'color': Colors.indigo, 'icon': Icons.lightbulb, 'name': 'General Knowledge'},
+    {'color': Colors.amber, 'icon': Icons.games, 'name': 'Entertainment'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: DefaultTextStyle(
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-                child: AnimatedTextKit(
-                  animatedTexts: [
-                    WavyAnimatedText('Flashcard Quiz'),
-                  ],
-                  isRepeatingAnimation: true,
-                ),
+      appBar: AppBar(
+        title: AnimatedTextKit(
+          animatedTexts: [
+            ColorizeAnimatedText(
+              'Flashcard Quiz App',
+              textStyle: const TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-              ),
+              colors: [
+                Colors.blue,
+                Colors.purple,
+                Colors.red,
+                Colors.green,
+              ],
+            ),
+          ],
+          isRepeatingAnimation: true,
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).colorScheme.secondary,
+              ],
             ),
           ),
-          SliverToBoxAdapter(
-            child: Consumer<ProgressProvider>(
-              builder: (context, progress, _) => Padding(
-                padding: const EdgeInsets.all(16.0),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            tooltip: 'Settings',
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.home), text: 'Home'),
+            Tab(icon: Icon(Icons.category), text: 'Categories'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildHomeTab(),
+          _buildCategoriesTab(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/custom'),
+        icon: const Icon(Icons.add),
+        label: const Text('Custom Quiz'),
+        tooltip: 'Create custom flashcards',
+      ),
+    );
+  }
+
+  Widget _buildHomeTab() {
+    return Consumer<ProgressProvider>(
+      builder: (context, progressProvider, _) {
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverToBoxAdapter(
                 child: Card(
                   elevation: 4,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       children: [
-                        const Text(
-                          'Your Progress',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: progress.totalQuestions == 0
-                              ? 0
-                              : progress.correctAnswers / progress.totalQuestions,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary,
-                          ),
-                          minHeight: 10,
-                        ),
-                        const SizedBox(height: 8),
                         Text(
-                          '${progress.correctAnswers}/${progress.totalQuestions} Questions',
-                          style: const TextStyle(fontSize: 16),
+                          'Your Progress',
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => _navigateToQuiz(context),
-                          child: const Text('Start Quiz'),
+                        ScoreWidget(
+                          score: progressProvider.correctAnswers,
+                          total: progressProvider.totalQuestions,
                         ),
                       ],
                     ),
@@ -90,114 +135,62 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16.0),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16.0,
-                crossAxisSpacing: 16.0,
-                childAspectRatio: 1.0,
-              ),
-              delegate: SliverChildListDelegate([
-                CategoryCard(
-                  title: 'CS Questions',
-                  icon: Icons.computer,
-                  color: Colors.blue,
-                  onTap: () => _navigateToQuiz(context, 'CS Questions'),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.0,
+                  crossAxisSpacing: 16.0,
+                  mainAxisSpacing: 16.0,
                 ),
-                CategoryCard(
-                  title: 'Flutter Questions',
-                  icon: Icons.flutter_dash,
-                  color: Colors.teal,
-                  onTap: () => _navigateToQuiz(context, 'Flutter Questions'),
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    if (index >= 4) return null;
+                    final category = categoriesWithColors[index];
+                    return _buildCategoryCard(context, category);
+                  },
+                  childCount: 4,
                 ),
-                CategoryCard(
-                  title: 'ML Questions',
-                  icon: Icons.psychology,
-                  color: Colors.purple,
-                  onTap: () => _navigateToQuiz(context, 'ML Questions'),
-                ),
-                CategoryCard(
-                  title: 'Math Questions',
-                  icon: Icons.calculate,
-                  color: Colors.orange,
-                  onTap: () => _navigateToQuiz(context, 'Math Questions'),
-                ),
-                CategoryCard(
-                  title: 'English',
-                  icon: Icons.book,
-                  color: Colors.green,
-                  onTap: () => _navigateToQuiz(context, 'English'),
-                ),
-                CategoryCard(
-                  title: 'Custom Flashcards',
-                  icon: Icons.create,
-                  color: Colors.pink,
-                  onTap: () => _navigateToCustomFlashcards(context),
-                ),
-              ]),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSettingsDialog(context),
-        child: const Icon(Icons.settings),
-      ),
-    );
-  }
-
-  void _navigateToQuiz(BuildContext context, [String? category]) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => QuizScreen(category: category ?? 'Flutter Questions'), // Replace with the correct screen for the quiz
-      ),
-    );
-  }
-  void _navigateToCustomFlashcards(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CustomFlashcardScreen(),
-      ),
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Settings'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Consumer<SettingsProvider>(
-              builder: (context, settings, _) => Column(
-                children: [
-                  SwitchListTile(
-                    title: const Text('Sound Effects'),
-                    value: settings.option1,
-                    onChanged: (value) => settings.setOption1(value),
-                  ),
-                  SwitchListTile(
-                    title: const Text('Dark Mode'),
-                    value: settings.option2,
-                    onChanged: (value) => settings.setOption2(value),
-                  ),
-                ],
               ),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoriesTab() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.0,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+      ),
+      itemCount: categoriesWithColors.length,
+      itemBuilder: (context, index) => _buildCategoryCard(
+        context,
+        categoriesWithColors[index],
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, Map<String, dynamic> category) {
+    return CategoryCard(
+      title: category['name'] as String,
+      icon: category['icon'] as IconData,
+      color: category['color'] as Color,
+      onTap: () => _navigateToQuiz(context, category['name'] as String),
+    );
+  }
+
+  void _navigateToQuiz(BuildContext context, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(category: category),
       ),
     );
   }

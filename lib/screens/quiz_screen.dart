@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import '../models/flashcard.dart';
 import '../services/trivia_service.dart';
 import '../widgets/flashcard_widget.dart';
 import '../widgets/score_widget.dart';
-import 'package:animations/animations.dart';
-import 'package:confetti/confetti.dart';
-
 import 'review_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -22,34 +20,97 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   final List<Flashcard> _incorrectFlashcards = [];
   int _currentIndex = 0;
   int _score = 0;
-  bool _isLoading = true;
   List<Flashcard> _flashcards = [];
-  late AnimationController _controller;
-  late ConfettiController _confettiController;
+  late AnimationController _slideController;
 
   @override
   void initState() {
     super.initState();
-    _flashcardsFuture = _loadQuestions(); // Store the Future
-    _controller = AnimationController(
+    _flashcardsFuture = _loadQuestions();
+    _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: const Duration(milliseconds: 300),
     );
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
   }
 
   Future<List<Flashcard>> _loadQuestions() async {
     try {
-      final questions = await TriviaService().fetchQuestions(category: widget.category);
-      setState(() {
-        _flashcards = questions;
-        _isLoading = false;
-      });
+      final questions = await TriviaService().fetchQuestions(
+        category: widget.category,
+      );
+      setState(() => _flashcards = questions);
       return questions;
     } catch (e) {
-      setState(() => _isLoading = false);
       throw Exception('Failed to load questions: $e');
     }
+  }
+
+  void _handleAnswer(bool correct) {
+    if (correct) {
+      setState(() => _score++);
+    } else {
+      _incorrectFlashcards.add(_flashcards[_currentIndex]);
+    }
+
+    if (_currentIndex < _flashcards.length - 1) {
+      _slideController.forward().then((_) {
+        setState(() {
+          _currentIndex++;
+          _slideController.reset();
+        });
+      });
+    } else {
+      _showResults();
+    }
+  }
+
+  void _showResults() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Quiz Complete!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ScoreWidget(
+              score: _score,
+              total: _flashcards.length,
+            ),
+            const SizedBox(height: 16),
+            if (_incorrectFlashcards.isNotEmpty)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReviewScreen(
+                        incorrectFlashcards: _incorrectFlashcards,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Review Incorrect Answers'),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.popUntil(
+              context,
+                  (route) => route.isFirst,
+            ),
+            child: const Text('Finish'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
   }
 
   @override
@@ -57,6 +118,16 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.category),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blue, Colors.purple],
+            ),
+          ),
+        ),
       ),
       body: FutureBuilder<List<Flashcard>>(
         future: _flashcardsFuture,
@@ -66,7 +137,23 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Error: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _flashcardsFuture = _loadQuestions();
+                      });
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -77,99 +164,37 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
             children: [
               LinearProgressIndicator(
                 value: (_currentIndex + 1) / _flashcards.length,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).primaryColor,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Question ${_currentIndex + 1}/${_flashcards.length}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               Expanded(
-                child: OpenContainer(
-                  openBuilder: (context, openContainer) {
-                    return _QuizResults(
-                      score: _score,
-                      total: _flashcards.length,
-                      onReview: () {
-                        openContainer();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ReviewScreen(
-                              incorrectFlashcards: _incorrectFlashcards,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  closedBuilder: (context, openContainer) {
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Question ${_currentIndex + 1}/${_flashcards.length}',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        Expanded(
-                          child: FlashcardWidget(
-                            flashcard: _flashcards[_currentIndex],
-                            onNext: (bool isCorrect) {
-                              setState(() {
-                                if (isCorrect) {
-                                  _score += 1;
-                                  _confettiController.play();
-                                } else {
-                                  _incorrectFlashcards.add(_flashcards[_currentIndex]);
-                                }
-                                _currentIndex += 1;
-                                if (_currentIndex == _flashcards.length) {
-                                  openContainer();
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset.zero,
+                    end: const Offset(-1.0, 0.0),
+                  ).animate(_slideController),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: FlashcardWidget(
+                      flashcard: _flashcards[_currentIndex],
+                      onNext: _handleAnswer,
+                    ),
+                  ),
                 ),
               ),
             ],
           );
         },
       ),
-    );
-  }
-}
-class _QuizResults extends StatelessWidget {
-  final int score;
-  final int total;
-  final VoidCallback onReview;
-
-  const _QuizResults({
-    required this.score,
-    required this.total,
-    required this.onReview,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Quiz Results',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 16),
-        ScoreWidget(
-          score: score,
-          total: total,
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: onReview,
-          child: const Text('Review Incorrect Answers'),
-        ),
-      ],
     );
   }
 }

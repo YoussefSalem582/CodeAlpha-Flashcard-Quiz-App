@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  animations:
   flutter:
     sdk: flutter
 
@@ -35,8 +36,8 @@ dependencies:
   audioplayers:
   shared_preferences:
   animated_text_kit:
-  animations:
   confetti:
+  http:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
