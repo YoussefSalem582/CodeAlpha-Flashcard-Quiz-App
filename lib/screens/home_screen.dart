@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../providers/progress_provider.dart';
-import '../widgets/score_widget.dart';
-import '../widgets/category_card.dart';
 import '../widgets/achievement_banner.dart';
 import 'quiz_screen.dart';
 
@@ -130,14 +128,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       backgroundColor: Theme.of(context).primaryColor,
       flexibleSpace: FlexibleSpaceBar(
         title: AnimatedTextKit(
+          repeatForever: true,
+          pause: const Duration(milliseconds: 10000),
+          displayFullTextOnTap: true,
           animatedTexts: [
             ColorizeAnimatedText(
-              'Flashcard Quiz',
+              'QuizHub',
               textStyle: const TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),
-              colors: [Colors.white, Colors.white70],
+              colors: [Colors.white, Colors.red, Colors.yellow, Colors.green],
             ),
           ],
           isRepeatingAnimation: true,
@@ -160,6 +161,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           icon: const Icon(Icons.settings),
           onPressed: () => Navigator.pushNamed(context, '/settings'),
           tooltip: 'Settings',
+          color: Colors.white,
         ),
       ],
     );

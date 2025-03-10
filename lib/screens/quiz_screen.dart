@@ -58,9 +58,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   Future<List<Flashcard>> _loadQuestions() async {
     try {
       setState(() => _isLoading = true);
-      final questions = await TriviaService().fetchQuestions(
-        category: widget.category,
-      );
+      final questions = await TriviaService().fetchQuestions(category: widget.category);
       setState(() {
         _flashcards = questions;
         _isLoading = false;
@@ -96,18 +94,19 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
       enableDrag: false,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isCorrect
-                ? [Colors.green.shade200, Colors.green.shade400]
-                : [Colors.red.shade200, Colors.red.shade400],
+                ? [Colors.green.shade300, Colors.green.shade500]
+                : [Colors.red.shade300, Colors.red.shade500],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black,
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 15,
               offset: const Offset(0, 5),
             ),
           ],
@@ -115,18 +114,16 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 20),
             Icon(
               isCorrect ? Icons.check_circle : Icons.cancel,
               color: Colors.white,
-              size: 48,
+              size: 56,
             ),
             const SizedBox(height: 16),
             Text(
               isCorrect ? 'Correct!' : 'Incorrect',
-              style: const TextStyle(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Colors.white,
-                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -138,28 +135,27 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     'Answer: ${_flashcards[_currentIndex].answer}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(color: Colors.white),
                   ),
                   if (!isCorrect && _flashcards[_currentIndex].explanation != null) ...[
                     const SizedBox(height: 12),
                     Text(
                       'Explanation:',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Colors.white70),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _flashcards[_currentIndex].explanation!,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.white),
                     ),
                   ],
                 ],
@@ -184,16 +180,13 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 backgroundColor: Colors.white,
                 foregroundColor: isCorrect ? Colors.green : Colors.red,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
               ),
               child: Text(
                 _currentIndex < _flashcards.length - 1 ? 'Next Question' : 'See Results',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -208,6 +201,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
+          constraints: BoxConstraints(maxWidth: 400), // Set maximum width
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -217,99 +211,94 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
             ),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                percentage >= 70 ? Icons.emoji_events : Icons.school,
-                size: 64,
-                color: percentage >= 70 ? Colors.amber : Colors.blue,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Quiz Complete!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+          child: SingleChildScrollView( // Add scrolling if content overflows
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  percentage >= 70 ? Icons.emoji_events : Icons.school,
+                  size: 64,
+                  color: percentage >= 70 ? Colors.amber : Colors.blue,
                 ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                const SizedBox(height: 16),
+                Text(
+                  'Quiz Complete!',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Column(
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      ScoreWidget(score: _score, total: _flashcards.length),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Time taken: ${_calculateTotalTime()}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                if (_incorrectFlashcards.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ReviewScreen(incorrectFlashcards: _incorrectFlashcards),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Review Incorrect Answers'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ScoreWidget(score: _score, total: _flashcards.length),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Time taken: ${_calculateTotalTime()}',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    _buildActionButton(
+                      onPressed: () {
+                        setState(() {
+                          _currentIndex = 0;
+                          _score = 0;
+                          _incorrectFlashcards.clear();
+                          _flashcardsFuture = _loadQuestions();
+                        });
+                        Navigator.pop(context);
+                      },
+                      icon: Icons.replay,
+                      label: 'Retry',
+                      color: Colors.blue,
+                    ),
+                    _buildActionButton(
+                      onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                      icon: Icons.home,
+                      label: 'Finish',
+                      color: Colors.green,
                     ),
                   ],
                 ),
-              ),
-              if (_incorrectFlashcards.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReviewScreen(
-                        incorrectFlashcards: _incorrectFlashcards,
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Review Incorrect Answers'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                ),
               ],
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildActionButton(
-                    onPressed: () {
-                      setState(() {
-                        _currentIndex = 0;
-                        _score = 0;
-                        _incorrectFlashcards.clear();
-                        _flashcardsFuture = _loadQuestions();
-                      });
-                      Navigator.pop(context);
-                    },
-                    icon: Icons.replay,
-                    label: 'Retry',
-                    color: Colors.blue,
-                  ),
-                  _buildActionButton(
-                    onPressed: () => Navigator.popUntil(
-                      context,
-                          (route) => route.isFirst,
-                    ),
-                    icon: Icons.home,
-                    label: 'Finish',
-                    color: Colors.green,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
-
   Widget _buildActionButton({
     required VoidCallback onPressed,
     required IconData icon,
@@ -324,9 +313,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }
@@ -370,11 +357,11 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      centerTitle: true,
       title: Text(
         widget.category,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
-      centerTitle: true,
       actions: [
         IconButton(
           icon: Icon(
@@ -392,15 +379,9 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     return FutureBuilder<List<Flashcard>>(
       future: _flashcardsFuture,
       builder: (context, snapshot) {
-        if (_isLoading) {
-          return _buildLoadingState();
-        }
-        if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState();
-        }
+        if (_isLoading) return _buildLoadingState();
+        if (snapshot.hasError) return _buildErrorState(snapshot.error.toString());
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildEmptyState();
         return _buildQuizContent();
       },
     );
@@ -413,10 +394,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
-          Text(
-            'Loading ${widget.category} questions...',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Loading ${widget.category} questions...', style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );
@@ -429,25 +407,17 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         children: [
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
-          Text(
-            'Error: $error',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
-          ),
+          Text('Error: $error', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => setState(() {
-              _flashcardsFuture = _loadQuestions();
-            }),
+            onPressed: () => setState(() => _flashcardsFuture = _loadQuestions()),
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
           ),
         ],
@@ -456,19 +426,16 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Text('No questions available for this category'),
-    );
+    return const Center(child: Text('No questions available for this category'));
   }
 
   Widget _buildQuizContent() {
     return Column(
       children: [
-        const SizedBox(height: kToolbarHeight + 16),
+        const SizedBox(height: kToolbarHeight + 20),
         _buildProgressIndicator(),
         _buildQuestionInfo(),
-        if (_showHint && _flashcards[_currentIndex].hint != null)
-          _buildHintCard(),
+        if (_showHint && _flashcards[_currentIndex].hint != null) _buildHintCard(),
         Expanded(child: _buildFlashcard()),
       ],
     );
@@ -477,9 +444,9 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   Widget _buildProgressIndicator() {
     return Container(
       height: 6,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Colors.grey[300],
         borderRadius: BorderRadius.circular(3),
       ),
       child: FractionallySizedBox(
@@ -488,10 +455,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).colorScheme.secondary,
-              ],
+              colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
             ),
             borderRadius: BorderRadius.circular(3),
           ),
@@ -502,29 +466,22 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
 
   Widget _buildQuestionInfo() {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(25),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2)),
               ],
             ),
             child: Text(
               'Question ${_currentIndex + 1}/${_flashcards.length}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           _buildTimer(),
@@ -538,30 +495,20 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.8), color],
-        ),
+        gradient: LinearGradient(colors: [color.withOpacity(0.8), color]),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: color,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.timer, color: Colors.white, size: 20),
+          const Icon(Icons.timer, color: Colors.white, size: 20),
           const SizedBox(width: 8),
           Text(
             '$_timeLeft s',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
       ),
@@ -573,19 +520,10 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade200,
-            Colors.orange.shade200,
-          ],
-        ),
+        gradient: LinearGradient(colors: [Colors.amber.shade200, Colors.orange.shade200]),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(
-            color: Colors.amber,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.amber.withOpacity(0.5), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -595,10 +533,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
           Expanded(
             child: Text(
               _flashcards[_currentIndex].hint!,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
             ),
           ),
         ],

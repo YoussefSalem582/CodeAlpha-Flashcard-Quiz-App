@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/flashcard.dart';
 
 class FlashcardWidget extends StatefulWidget {
@@ -14,110 +15,207 @@ class FlashcardWidget extends StatefulWidget {
   });
 
   @override
-  _FlashcardWidgetState createState() => _FlashcardWidgetState();
+  State<FlashcardWidget> createState() => _FlashcardWidgetState();
 }
 
-class _FlashcardWidgetState extends State<FlashcardWidget> {
+class _FlashcardWidgetState extends State<FlashcardWidget> with SingleTickerProviderStateMixin {
   int _selectedIndex = -1;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Text(
-                widget.flashcard.question,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildQuestionCard(),
+            const SizedBox(height: 40),
+            _buildAnswerSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor.withOpacity(0.9),
+            Theme.of(context).primaryColor,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-          const SizedBox(height: 30),
-          if (widget.flashcard.type == FlashcardType.trueFalse) ...[
-            ToggleButtons(
-              onPressed: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-                widget.onNext(index == 0 ? widget.flashcard.answer == 'True' : widget.flashcard.answer == 'False');
-              },
-              isSelected: [_selectedIndex == 0, _selectedIndex == 1],
-              selectedColor: Colors.white,
-              fillColor: Colors.blueAccent,
-              selectedBorderColor: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(15),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ColorFilter.mode(
+            Colors.white.withOpacity(0.1),
+            BlendMode.overlay,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'True',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: _selectedIndex == 0 && widget.showCorrectAnswer && widget.flashcard.answer == 'True'
-                          ? Colors.green
-                          : null,
-                    ),
-                  ),
+                const Icon(
+                  Icons.quiz_outlined,
+                  size: 48,
+                  color: Colors.white,
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'False',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: _selectedIndex == 1 && widget.showCorrectAnswer && widget.flashcard.answer == 'False'
-                          ? Colors.green
-                          : null,
-                    ),
+                const SizedBox(height: 24),
+                Text(
+                  widget.flashcard.question,
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 1.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-          ] else if (widget.flashcard.type == FlashcardType.multipleChoice) ...[
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: List.generate(
-                widget.flashcard.options!.length,
-                    (index) {
-                  return ChoiceChip(
-                    label: Text(
-                      widget.flashcard.options![index],
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: _selectedIndex == index && widget.showCorrectAnswer && widget.flashcard.answer == widget.flashcard.options![index]
-                            ? Colors.green
-                            : null,
-                      ),
-                    ),
-                    selected: _selectedIndex == index,
-                    onSelected: (value) {
-                      setState(() {
-                        _selectedIndex = value ? index : -1;
-                      });
-                      widget.onNext(value ? widget.flashcard.answer == widget.flashcard.options![index] : false);
-                    },
-                    selectedColor: Colors.blueAccent,
-                    labelPadding: const EdgeInsets.all(8.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  );
-                },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnswerSection() {
+    return widget.flashcard.type == FlashcardType.trueFalse
+        ? _buildTrueFalseButtons()
+        : _buildMultipleChoiceGrid();
+  }
+
+  Widget _buildTrueFalseButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: ['True', 'False'].asMap().entries.map((entry) {
+        final index = entry.key;
+        final text = entry.value;
+        final isSelected = _selectedIndex == index;
+        final isCorrect = isSelected &&
+            widget.showCorrectAnswer &&
+            widget.flashcard.answer == text;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          child: ElevatedButton(
+            onPressed: () {
+              setState(() => _selectedIndex = index);
+              widget.onNext(text == widget.flashcard.answer);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isCorrect
+                  ? Colors.green
+                  : isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.white,
+              foregroundColor: isSelected ? Colors.white : Colors.black87,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
+              ),
+              elevation: isSelected ? 8 : 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-          ],
-        ],
+            child: Text(
+              text,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMultipleChoiceGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.5,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
       ),
+      itemCount: widget.flashcard.options!.length,
+      itemBuilder: (context, index) {
+        final option = widget.flashcard.options![index];
+        final isSelected = _selectedIndex == index;
+        final isCorrect = isSelected &&
+            widget.showCorrectAnswer &&
+            widget.flashcard.answer == option;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          child: ElevatedButton(
+            onPressed: () {
+              setState(() => _selectedIndex = index);
+              widget.onNext(widget.flashcard.answer == option);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isCorrect
+                  ? Colors.green
+                  : isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.white,
+              foregroundColor: isSelected ? Colors.white : Colors.black87,
+              elevation: isSelected ? 8 : 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Text(
+              option,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      },
     );
   }
 }
