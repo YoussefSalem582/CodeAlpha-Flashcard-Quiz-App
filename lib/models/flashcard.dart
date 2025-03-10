@@ -18,6 +18,8 @@ class Flashcard {
   final DateTime? lastReviewed;
   final int timesReviewed;
   final double successRate;
+  final int? selectedChoiceIndex;
+  final int? correctChoiceIndex;
 
   Flashcard({
     required this.question,
@@ -32,7 +34,11 @@ class Flashcard {
     this.lastReviewed,
     this.timesReviewed = 0,
     this.successRate = 0.0,
+    this.selectedChoiceIndex,
+    this.correctChoiceIndex,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  List<String> get choices => options ?? [];
 
   Map<String, dynamic> toJson() {
     return {
@@ -48,6 +54,8 @@ class Flashcard {
       'lastReviewed': lastReviewed?.toIso8601String(),
       'timesReviewed': timesReviewed,
       'successRate': successRate,
+      'selectedChoiceIndex': selectedChoiceIndex,
+      'correctChoiceIndex': correctChoiceIndex,
     };
   }
 
@@ -67,6 +75,8 @@ class Flashcard {
           : null,
       timesReviewed: json['timesReviewed'] as int? ?? 0,
       successRate: (json['successRate'] as num?)?.toDouble() ?? 0.0,
+      selectedChoiceIndex: json['selectedChoiceIndex'] as int?,
+      correctChoiceIndex: json['correctChoiceIndex'] as int?,
     );
   }
 
