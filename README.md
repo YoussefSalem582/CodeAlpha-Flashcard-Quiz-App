@@ -24,28 +24,29 @@ The Flashcard Quiz App is an educational tool that allows users to practice and 
 
 ---
 
+
 ## Screenshots
 
 Here’s a glimpse of the Flashcard Quiz App in action:
 
 - **Home Screen with category selection**  
-  ![Home Screen](https://github.com/user-attachments/assets/ea2aebc0-fc06-4d79-8c7a-443f74770624)
+  <img src="https://github.com/user-attachments/assets/ea2aebc0-fc06-4d79-8c7a-443f74770624" width="300" alt="Home Screen">
 
 - **Quiz Screen with timer and hint**  
-  ![Quiz](https://github.com/user-attachments/assets/adb1af98-1f2d-49ab-9ad7-838dbfa1001a)  
+  <img src="https://github.com/user-attachments/assets/adb1af98-1f2d-49ab-9ad7-838dbfa1001a" width="300" alt="Quiz">  
   *Additional views:*  
-  ![Correct](https://github.com/user-attachments/assets/2f3bfa77-11d0-4851-9f12-a0ae527f6006) (Correct Answer Feedback)  
-  ![Incorrect](https://github.com/user-attachments/assets/87cb2cd1-88cb-4bb8-b41d-70a1e830b7e3) (Incorrect Answer Feedback)
+  <img src="https://github.com/user-attachments/assets/2f3bfa77-11d0-4851-9f12-a0ae527f6006" width="300" alt="Correct Answer Feedback"> (Correct Answer Feedback)  
+  <img src="https://github.com/user-attachments/assets/87cb2cd1-88cb-4bb8-b41d-70a1e830b7e3" width="300" alt="Incorrect Answer Feedback"> (Incorrect Answer Feedback)
 
 - **Review Screen with incorrect answers**  
-  ![Review Page](https://github.com/user-attachments/assets/582dc9de-5fcf-4d46-9734-457407f5a8df)
+  <img src="https://github.com/user-attachments/assets/582dc9de-5fcf-4d46-9734-457407f5a8df" width="300" alt="Review Page">
 
 - **Custom Flashcard creation**  
   *(Screenshot not yet available—add your own once captured!)*  
   Placeholder: *Image of the custom flashcard creation screen will go here.*
 
 - **Bonus: Quiz Complete Screen**  
-  ![Quiz Complete](https://github.com/user-attachments/assets/04152409-0702-4ac7-a630-d3d85119a600)
+  <img src="https://github.com/user-attachments/assets/04152409-0702-4ac7-a630-d3d85119a600" width="300" alt="Quiz Complete">
 
 
 ---
