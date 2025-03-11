@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/category_card.dart';
 import '../services/trivia_service.dart';
-import '../screens/quiz_screen.dart';
-import 'package:provider/provider.dart';
-import '../providers/settings_provider.dart';
+import 'quiz_screen.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});

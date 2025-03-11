@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/progress_provider.dart';
-import 'providers/settings_provider.dart';
-import 'screens/home_screen.dart';
-import 'screens/categories_screen.dart';
 import 'screens/custom_flashcard_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 
 void main() {
@@ -17,19 +15,22 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProgressProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: MaterialApp(
         title: 'Flashcard Quiz App',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.deepPurple,
+          primaryColor: Colors.deepPurple,
+          colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.purpleAccent),
+          textTheme: TextTheme(
+            headlineSmall: TextStyle(fontWeight: FontWeight.bold),
+            bodyLarge: TextStyle(color: Colors.grey[600]),
+          ),
         ),
-        initialRoute: '/',
+        home: HomeScreen(),
         routes: {
-          '/': (context) => HomeScreen(),
-          '/categories': (context) => CategoriesScreen(),
-          '/custom': (context) => CustomFlashcardScreen(),
           '/settings': (context) => SettingsScreen(),
+          '/custom': (context) => CustomFlashcardScreen(),
         },
       ),
     );
