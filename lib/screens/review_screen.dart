@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:animations/animations.dart';
 import '../models/flashcard.dart';
 
 class ReviewScreen extends StatefulWidget {
@@ -37,7 +36,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             ],
           ),
         ),
-        child: _buildContent(context),
+        child: SafeArea(child: _buildContent(context)),
       ),
       floatingActionButton: _buildFAB(context),
     );
@@ -60,12 +59,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.pop(context),
         tooltip: 'Back',
-        color: Colors.white,
       ),
       title: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
             'Review Answers',
@@ -85,25 +84,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Widget _buildContent(BuildContext context) {
-    if (widget.incorrectFlashcards.isEmpty) {
-      return _buildEmptyState(context);
-    }
-    return _buildCardList(context);
+    return widget.incorrectFlashcards.isEmpty
+        ? _buildEmptyState(context)
+        : _buildCardList(context);
   }
 
   Widget _buildCardList(BuildContext context) {
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-        bottom: 88,
-        left: 16,
-        right: 16,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
       itemCount: widget.incorrectFlashcards.length,
-      itemBuilder: (context, index) {
-        return _buildReviewCard(context, index);
-      },
+      itemBuilder: (context, index) => _buildReviewCard(context, index),
     );
   }
 
@@ -111,19 +102,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final flashcard = widget.incorrectFlashcards[index];
     final isExpanded = _expandedCards[index] ?? false;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -179,10 +161,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
-              const SizedBox(width: 8),
-              const Text(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green, size: 20),
+              SizedBox(width: 8),
+              Text(
                 'Correct Answer:',
                 style: TextStyle(
                   color: Colors.green,
@@ -209,13 +191,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
           if (flashcard.selectedChoiceIndex != null) ...[
+            const SizedBox(height: 16),
             Row(
-              children: [
-                const Icon(Icons.cancel, color: Colors.red, size: 20),
-                const SizedBox(width: 8),
-                const Text(
+              children: const [
+                Icon(Icons.cancel, color: Colors.red, size: 20),
+                SizedBox(width: 8),
+                Text(
                   'Your Answer:',
                   style: TextStyle(
                     color: Colors.red,
@@ -285,9 +267,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.blue.withOpacity(0.1),
-        border: Border(
-          top: BorderSide(color: Colors.blue.withOpacity(0.2)),
-        ),
+        border: Border(top: BorderSide(color: Colors.blue.withOpacity(0.2))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +288,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  flashcard.explanation!,
+                  flashcard.explanation ?? '',
                   style: const TextStyle(color: Colors.black87),
                 ),
               ],
@@ -324,9 +304,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.amber.withOpacity(0.1),
-        border: Border(
-          top: BorderSide(color: Colors.amber.withOpacity(0.2)),
-        ),
+        border: Border(top: BorderSide(color: Colors.amber.withOpacity(0.2))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,10 +326,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 const SizedBox(height: 4),
                 Text(
                   hint,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.black87, fontSize: 14),
                 ),
               ],
             ),
@@ -396,10 +371,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             icon: const Icon(Icons.arrow_back),
             label: const Text('Back to Quiz'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),

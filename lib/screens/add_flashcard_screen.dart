@@ -1,7 +1,9 @@
+// lib/screens/add_flashcard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/flashcard.dart';
 import '../providers/flashcard_provider.dart';
+import '../widgets/custom_text_form_field.dart';
 
 class AddFlashcardScreen extends StatefulWidget {
   const AddFlashcardScreen({super.key});
@@ -37,7 +39,7 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              _buildTextField(
+              CustomTextFormField(
                 controller: questionController,
                 label: 'Question',
                 validator: (value) {
@@ -61,7 +63,7 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
               const SizedBox(height: 20),
               if (_selectedType == FlashcardType.multipleChoice)
                 ...optionsController.map((controller) {
-                  return _buildTextField(
+                  return CustomTextFormField(
                     controller: controller,
                     label: 'Option',
                     validator: (value) {
@@ -73,7 +75,7 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
                   );
                 }).toList(),
               const SizedBox(height: 20),
-              _buildTextField(
+              CustomTextFormField(
                 controller: answerController,
                 label: 'Answer',
                 validator: (value) {
@@ -102,19 +104,6 @@ class _AddFlashcardScreenState extends State<AddFlashcardScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({required TextEditingController controller, required String label, String? Function(String?)? validator}) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-      ),
-      validator: validator,
     );
   }
 
